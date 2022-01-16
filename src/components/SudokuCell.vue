@@ -8,11 +8,22 @@ export default defineComponent({
       type: Object as PropType<CellState>,
       required: true,
     },
+    pencil: {
+      type: Array as PropType<boolean[]>,
+      required: true,
+    },
+    highlightedValue: {
+      type: Number as PropType<number | null>,
+    },
     isSelected: Boolean,
-    isHighlighted: Boolean,
   },
   setup() {
 
+  },
+  computed: {
+    showPencilValues() {
+      return this.cell.cellValue === null && this.pencil.some(v => v);
+    }
   },
 
 })
@@ -22,15 +33,25 @@ export default defineComponent({
   <div
     @click="$emit('onCellSelect')"
     :class="{
-      'cell': true,
       cell: true,
       filled: cell.cellValue != null,
-      highlighted: isHighlighted,
+      highlighted: highlightedValue != null && cell.cellValue === highlightedValue,
       selected: isSelected,
       wrong: cell.isWrong,
       prefilled: cell.isPrefilled,
+      'grid grid-cols-3 grid-rows-3': showPencilValues,
     }"
-  >{{ cell.cellValue }}</div>
+    class
+  >
+    <template v-if="showPencilValues">
+      <span
+        class="text-xs"
+        :class="{ invisible: !v, highlighted: (n + 1 == highlightedValue) }"
+        v-for="(v, n) in pencil"
+      >{{ (n + 1) }}</span>
+    </template>
+    <template v-else>{{ cell.cellValue }}</template>
+  </div>
 </template>
 
 <style lang="postcss">
@@ -58,6 +79,10 @@ export default defineComponent({
   @apply bg-blue-300;
 }
 
+.cell span.highlighted {
+  @apply bg-blue-300;
+}
+
 .cell.prefilled {
   color: black;
 }
@@ -72,5 +97,4 @@ export default defineComponent({
   @apply bg-red-500;
   @apply border-2 border-blue-300;
 }
-
 </style>

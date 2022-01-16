@@ -10,29 +10,37 @@ export default defineComponent({
     SudokuCell,
     SudokuGrid
   },
+  /**
+   * Will be using setup to define data and computed values
+   * I am using this instead of Data so that I can more easily initialize the values along with ts-types
+   */
   setup() {
     const sudokuLevel = ref(3); // n
     const gridSize = computed(() => sudokuLevel.value ** 2); // n*n
 
     const grid: Ref<CellState[][]> = ref(Array(gridSize.value).fill(Array(gridSize.value).fill(new CellState())));
 
-    const selected = ref([-1, -1])
+    const pencilGrid: Ref<boolean[][][]> = ref(Array(gridSize.value).fill(Array(gridSize.value).fill(Array(9).fill(false))))
 
-    const isSelecting = computed(() => (selected.value[0] >= 0
-      && selected.value[0] < gridSize.value
-      && selected.value[1] >= 0
-      && selected.value[1] < gridSize.value)
-    )
-
-    const selectedValue = computed(() => isSelecting.value ? grid.value[selected.value[0]][selected.value[1]].cellValue : null);
+    const selectedIndexes = ref([-1, -1])
 
     const pencilMode = ref(false);
 
+    const isSelecting = computed(() => (selectedIndexes.value[0] >= 0
+      && selectedIndexes.value[0] < gridSize.value
+      && selectedIndexes.value[1] >= 0
+      && selectedIndexes.value[1] < gridSize.value)
+    )
+
+    const selectedValue = computed(() => isSelecting.value ? grid.value[selectedIndexes.value[0]][selectedIndexes.value[1]].cellValue : null);
+
+
     return {
       sudokuLevel,
+      pencilGrid,
       grid,
       gridSize,
-      selected,
+      selected: selectedIndexes,
       isSelecting,
       pencilMode,
       selectedValue,
@@ -148,6 +156,17 @@ export default defineComponent({
       this.grid[i] = modifiedRow;
     },
 
+    togglePencilGridValue(i: number, j: number, n: number): void {
+      const row = this.pencilGrid[i].slice(0);
+
+      const arr = row[j].slice(0);
+
+      arr[n - 1] = !arr[n - 1];
+
+      row[j] = arr;
+      this.pencilGrid[i] = row;
+    },
+
     setGridWrongValue(i: number, j: number, wrong = true) {
       this.setGridValue(i, j, {
         ...this.grid[i][j],
@@ -165,12 +184,16 @@ export default defineComponent({
 
       if (cell.isPrefilled) return;
 
-      this.setGridValue(i, j, {
-        ...cell,
-        cellValue: n,
-      })
+      if (n && this.pencilMode) {
+        this.togglePencilGridValue(i, j, n)
+      } else {
+        this.setGridValue(i, j, {
+          ...cell,
+          cellValue: n,
+        })
 
-      this.judgeBoard();
+        this.judgeBoard();
+      }
       // clearSelection();
     },
 
@@ -210,11 +233,12 @@ export default defineComponent({
           <div class="flex flex-wrap flex-row">
             <div class="md:basis-1/6"></div>
             <div class="md:basis-3/6">
-              <sudoku-grid :grid="grid" :sudoku-level="sudokuLevel">
-                <template v-slot.default="{ i, j, cell }">
+              <sudoku-grid :grid="grid" :pencil-grid="pencilGrid" :sudoku-level="sudokuLevel">
+                <template v-slot.default="{ i, j, cell, pencil }">
                   <sudoku-cell
                     :cell="grid[i][j]"
-                    :is-highlighted="cell.cellValue != null && cell.cellValue == selectedValue"
+                    :pencil="pencil"
+                    :highlighted-value="selectedValue"
                     :is-selected="(i == selected[0] && j == selected[1])"
                     @onCellSelect="selectCell(i, j)"
                   />

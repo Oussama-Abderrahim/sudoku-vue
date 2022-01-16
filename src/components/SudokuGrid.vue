@@ -8,6 +8,10 @@ export default defineComponent({
       type: Object as PropType<CellState[][]>,
       required: true,
     },
+    pencilGrid: {
+      type: Object as PropType<(boolean[][][])>,
+      required: true,
+    },
     sudokuLevel: {
       type: Number,
       default: () => 3
@@ -28,6 +32,7 @@ export default defineComponent({
                 :i="block_i * 3 + i"
                 :j="block_j * 3 + j"
                 :cell="grid[block_i * 3 + i][block_j * 3 + j]"
+                :pencil="pencilGrid[block_i * 3 + i][block_j * 3 + j]"
               ></slot>
             </template>
           </template>
