@@ -5,6 +5,8 @@ import CellState from './models/CellState';
 import SudokuCell from './components/SudokuCell.vue';
 import SudokuGrid from './components/SudokuGrid.vue';
 
+import PuzzleSet from './models/SudokuPuzzleSet.json';
+
 export default defineComponent({
   components: {
     SudokuCell,
@@ -15,10 +17,20 @@ export default defineComponent({
    * I am using this instead of Data so that I can more easily initialize the values along with ts-types
    */
   setup() {
+
     const sudokuLevel = ref(3); // n
     const gridSize = computed(() => sudokuLevel.value ** 2); // n*n
 
-    const grid: Ref<CellState[][]> = ref(Array(gridSize.value).fill(Array(gridSize.value).fill(new CellState())));
+    const puzzle: number[] = PuzzleSet[0] as number[];
+
+    const grid: Ref<CellState[][]> = ref(
+      Array(gridSize.value)
+        .fill(null).map((_, i) =>
+          Array(gridSize.value).fill(null).map((_, j) =>
+            new CellState(puzzle[i * gridSize.value + j] || null)
+          )
+        )
+    );
 
     const pencilGrid: Ref<boolean[][][]> = ref(Array(gridSize.value).fill(Array(gridSize.value).fill(Array(9).fill(false))))
 
@@ -60,29 +72,39 @@ export default defineComponent({
       'Digit9': 9
     };
 
-    window.addEventListener('keyup', (ev) => {
+    window.addEventListener('keydown', (ev) => {
       if (ev.code in ALLOWED_KEYS) {
         this.assignCell(ALLOWED_KEYS[ev.code])
+        return;
       }
 
       if (!this.isSelecting) return;
 
+      if (ev.code == 'Space') {
+        this.quickPencilCell();
+        return;
+      }
+
       const i = this.selected[0];
       const j = this.selected[1]
       if (ev.code == 'ArrowRight') {
-        this.selected = [i, (j >= this.gridSize) ? j : j + 1];
+        this.selected = [i, (j >= this.gridSize - 1) ? j : j + 1];
+        return;
       }
 
       if (ev.code == 'ArrowLeft') {
         this.selected = [i, j === 0 ? j : j - 1];
+        return;
       }
 
       if (ev.code == 'ArrowUp') {
         this.selected = [i === 0 ? i : i - 1, j];
+        return;
       }
 
       if (ev.code == 'ArrowDown') {
-        this.selected = [i >= this.gridSize ? i : i + 1, j];
+        this.selected = [i >= this.gridSize - 1 ? i : i + 1, j];
+        return;
       }
     });
   },
@@ -100,20 +122,22 @@ export default defineComponent({
     judgeCell(i: number, j: number): void {
       let hasError = false;
 
-      if (this.grid[i][j].cellValue == null) {
+      const value = this.grid[i][j].cellValue;
+
+      if (value == null) {
         this.setGridWrongValue(i, j, false); // in case when a cell value is deleted
         return;
       }
 
       // Judge row and column
       for (let k = 0; k < this.gridSize; k++) {
-        if (this.grid[i][j].cellValue === this.grid[i][k].cellValue && j != k) {
+        if (value === this.grid[i][k].cellValue && j != k) {
           hasError = true;
 
           this.setGridWrongValue(i, k);
         }
 
-        if (this.grid[i][j].cellValue === this.grid[k][j].cellValue && i != k) {
+        if (value === this.grid[k][j].cellValue && i != k) {
           hasError = true;
           this.setGridWrongValue(k, j);
         }
@@ -129,7 +153,7 @@ export default defineComponent({
         for (let m = startJ; m < endJ; m++) {
           if (i == k && j == m) continue; // Skip the current cell
 
-          if (this.grid[i][j].cellValue === this.grid[k][m].cellValue) {
+          if (value === this.grid[k][m].cellValue) {
             hasError = true;
 
             this.setGridWrongValue(k, m);
@@ -138,6 +162,41 @@ export default defineComponent({
       }
 
       this.setGridWrongValue(i, j, hasError);
+    },
+
+    checkCellValue(i: number, j: number, value: number | null): boolean {
+      if (value == null) {
+        return false;
+      }
+
+      // Judge row and column
+      for (let k = 0; k < this.gridSize; k++) {
+        if (value === this.grid[i][k].cellValue && j != k) {
+          return true;
+        }
+
+        if (value === this.grid[k][j].cellValue && i != k) {
+          return true;
+        }
+      }
+      // Judge current square
+      const startI = i - i % this.sudokuLevel;
+      const startJ = j - j % this.sudokuLevel;
+
+      const endI = startI + this.sudokuLevel;
+      const endJ = startJ + this.sudokuLevel;
+
+      for (let k = startI; k < endI; k++) {
+        for (let m = startJ; m < endJ; m++) {
+          if (i == k && j == m) continue; // Skip the current cell
+
+          if (value === this.grid[k][m].cellValue) {
+            return true;
+          }
+        }
+      }
+
+      return false;
     },
 
     judgeBoard(): void {
@@ -167,6 +226,13 @@ export default defineComponent({
       this.pencilGrid[i] = row;
     },
 
+    clearPencilGridCell(i: number, j: number): void {
+      const row = this.pencilGrid[i].slice(0);
+
+      row[j] = new Array(this.gridSize).fill(false);
+      this.pencilGrid[i] = row;
+    },
+
     setGridWrongValue(i: number, j: number, wrong = true) {
       this.setGridValue(i, j, {
         ...this.grid[i][j],
@@ -174,6 +240,21 @@ export default defineComponent({
       })
     },
 
+    quickPencilCell() {
+      this.pencilMode = true;
+      for (let i = 0; i < this.gridSize; i++) {
+        this.assignCell(i + 1);
+      }
+    },
+    quickPencilAll() {
+      for (let i = 0; i < this.gridSize; i++) {
+        for (let j = 0; j < this.gridSize; j++) {
+          this.selected = [i, j]
+          this.quickPencilCell()
+        }
+      }
+      this.clearSelection();
+    },
     assignCell(n: number | null): void {
       const i = this.selected[0]
       const j = this.selected[1]
@@ -183,14 +264,46 @@ export default defineComponent({
       const cell = this.grid[i][j];
 
       if (cell.isPrefilled) return;
+      if (cell.cellValue === n) return; // avoid unnecessary operations
 
       if (n && this.pencilMode) {
-        this.togglePencilGridValue(i, j, n)
+        if (!this.checkCellValue(i, j, n)) {
+          this.togglePencilGridValue(i, j, n)
+        }
       } else {
         this.setGridValue(i, j, {
           ...cell,
           cellValue: n,
         })
+
+        this.clearPencilGridCell(i, j);
+
+        if (n != null) {
+          for (let k = 0; k < this.gridSize; k++) {
+            if (this.pencilGrid[i][k][n - 1]) {
+              this.togglePencilGridValue(i, k, n);
+            }
+
+            if (this.pencilGrid[k][j][n - 1]) {
+              this.togglePencilGridValue(k, j, n);
+            }
+
+          }
+          // Judge current square
+          const startI = i - i % this.sudokuLevel;
+          const startJ = j - j % this.sudokuLevel;
+
+          const endI = startI + this.sudokuLevel;
+          const endJ = startJ + this.sudokuLevel;
+
+          for (let k = startI; k < endI; k++) {
+            for (let m = startJ; m < endJ; m++) {
+              if (this.pencilGrid[k][m][n - 1]) {
+                this.togglePencilGridValue(k, m, n);
+              }
+            }
+          }
+        }
 
         this.judgeBoard();
       }
@@ -199,16 +312,19 @@ export default defineComponent({
 
     clearAll(): void {
       let board = this.grid;
+      let pencilGrid = this.pencilGrid
 
       for (let i = 0; i < this.gridSize; i++) {
         for (let j = 0; j < this.gridSize; j++) {
           if (!board[i][j].isPrefilled) {
             board[i][j] = new CellState();
+            pencilGrid[i][j] = new Array(this.gridSize).fill(false)
           }
         }
       }
 
       this.grid = board;
+      this.pencilGrid = pencilGrid;
     }
   }
 })
@@ -227,6 +343,8 @@ export default defineComponent({
           :class="{ 'button-dark': pencilMode, 'button': !pencilMode }"
           @click="togglePencilMode"
         >Pencil mode {{ pencilMode ? 'On' : 'Off' }}</button>
+        <br>
+        <button class="button-dark mt-5" @click="quickPencilAll">Quick Pencil</button>
       </div>
       <div class="md:basis-3/4">
         <div class="container mx-auto mt-10">

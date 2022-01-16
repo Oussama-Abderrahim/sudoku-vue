@@ -3,9 +3,9 @@ class CellState {
   isWrong: boolean;
   isPrefilled: boolean;
 
-  constructor() {
-    this.cellValue = null;
-    this.isPrefilled = false;
+  constructor(cellValue: number | null = null) {
+    this.cellValue = cellValue;
+    this.isPrefilled = cellValue != null;
     this.isWrong = false;
   }
 }
