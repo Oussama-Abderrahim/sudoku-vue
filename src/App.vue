@@ -20,14 +20,13 @@ export default defineComponent({
 
     const sudokuLevel = ref(3); // n
     const gridSize = computed(() => sudokuLevel.value ** 2); // n*n
-
-    const puzzle: number[] = PuzzleSet[0] as number[];
+    const difficulty: Ref<("medium" | "extreme")> = ref("medium");
 
     const grid: Ref<CellState[][]> = ref(
       Array(gridSize.value)
         .fill(null).map((_, i) =>
           Array(gridSize.value).fill(null).map((_, j) =>
-            new CellState(puzzle[i * gridSize.value + j] || null)
+            new CellState()
           )
         )
     );
@@ -52,6 +51,7 @@ export default defineComponent({
       pencilGrid,
       grid,
       gridSize,
+      difficulty,
       selected: selectedIndexes,
       isSelecting,
       pencilMode,
@@ -59,56 +59,83 @@ export default defineComponent({
     }
   },
   mounted() {
-    const ALLOWED_KEYS: { [key: string]: number | null } = {
-      'Delete': null,
-      'Digit1': 1,
-      'Digit2': 2,
-      'Digit3': 3,
-      'Digit4': 4,
-      'Digit5': 5,
-      'Digit6': 6,
-      'Digit7': 7,
-      'Digit8': 8,
-      'Digit9': 9
-    };
-
-    window.addEventListener('keydown', (ev) => {
-      if (ev.code in ALLOWED_KEYS) {
-        this.assignCell(ALLOWED_KEYS[ev.code])
-        return;
-      }
-
-      if (!this.isSelecting) return;
-
-      if (ev.code == 'Space') {
-        this.quickPencilCell();
-        return;
-      }
-
-      const i = this.selected[0];
-      const j = this.selected[1]
-      if (ev.code == 'ArrowRight') {
-        this.selected = [i, (j >= this.gridSize - 1) ? j : j + 1];
-        return;
-      }
-
-      if (ev.code == 'ArrowLeft') {
-        this.selected = [i, j === 0 ? j : j - 1];
-        return;
-      }
-
-      if (ev.code == 'ArrowUp') {
-        this.selected = [i === 0 ? i : i - 1, j];
-        return;
-      }
-
-      if (ev.code == 'ArrowDown') {
-        this.selected = [i >= this.gridSize - 1 ? i : i + 1, j];
-        return;
-      }
-    });
+    this.registerKeyboardEvents();
+    this.newGame();
   },
   methods: {
+    registerKeyboardEvents() {
+      const ALLOWED_KEYS: { [key: string]: number | null } = {
+        'Delete': null,
+        'Digit1': 1,
+        'Digit2': 2,
+        'Digit3': 3,
+        'Digit4': 4,
+        'Digit5': 5,
+        'Digit6': 6,
+        'Digit7': 7,
+        'Digit8': 8,
+        'Digit9': 9,
+        'KeyQ': 10,
+        'KeyB': 11,
+        'KeyC': 12,
+        'KeyD': 13,
+        'KeyE': 14,
+        'KeyF': 15,
+      };
+
+      window.addEventListener('keydown', (ev) => {
+        if (ev.code in ALLOWED_KEYS) {
+          this.assignCell(ALLOWED_KEYS[ev.code])
+          return;
+        }
+
+        if (!this.isSelecting) return;
+
+        if (ev.code == 'Space') {
+          this.togglePencilMode()
+          return;
+        }
+
+        const i = this.selected[0];
+        const j = this.selected[1]
+        if (ev.code == 'ArrowRight') {
+          this.selected = [i, (j >= this.gridSize - 1) ? j : j + 1];
+          return;
+        }
+
+        if (ev.code == 'ArrowLeft') {
+          this.selected = [i, j === 0 ? j : j - 1];
+          return;
+        }
+
+        if (ev.code == 'ArrowUp') {
+          this.selected = [i === 0 ? i : i - 1, j];
+          return;
+        }
+
+        if (ev.code == 'ArrowDown') {
+          this.selected = [i >= this.gridSize - 1 ? i : i + 1, j];
+          return;
+        }
+      });
+    },
+    generateSudoku(difficulty: ("extreme" | "medium")): number[] {
+
+      const puzzle = PuzzleSet[difficulty][Math.floor(Math.random() * PuzzleSet[difficulty].length)] as number[];
+
+      return puzzle;
+    },
+    newGame(): void {
+      this.clearAll();
+      const puzzle: number[] = this.generateSudoku(this.difficulty);
+
+      this.grid = Array(this.gridSize)
+        .fill(null).map((_, i) =>
+          Array(this.gridSize).fill(null).map((_, j) =>
+            new CellState(puzzle[i * this.gridSize + j] || null)
+          )
+        );
+    },
     togglePencilMode(): void {
       this.pencilMode = !this.pencilMode;
     },
@@ -247,13 +274,45 @@ export default defineComponent({
       }
     },
     quickPencilAll() {
+      const savedMode = this.pencilMode;
       for (let i = 0; i < this.gridSize; i++) {
         for (let j = 0; j < this.gridSize; j++) {
           this.selected = [i, j]
+          this.clearPencilGridCell(i, j);
           this.quickPencilCell()
         }
       }
       this.clearSelection();
+
+      this.pencilMode = savedMode;
+    },
+    updatePencilGridValues(i: number, j: number, n: number): void {
+
+      for (let k = 0; k < this.gridSize; k++) {
+        if (this.pencilGrid[i][k][n - 1]) {
+          this.togglePencilGridValue(i, k, n);
+        }
+
+        if (this.pencilGrid[k][j][n - 1]) {
+          this.togglePencilGridValue(k, j, n);
+        }
+
+      }
+      // Judge current square
+      const startI = i - i % this.sudokuLevel;
+      const startJ = j - j % this.sudokuLevel;
+
+      const endI = startI + this.sudokuLevel;
+      const endJ = startJ + this.sudokuLevel;
+
+      for (let k = startI; k < endI; k++) {
+        for (let m = startJ; m < endJ; m++) {
+          if (this.pencilGrid[k][m][n - 1]) {
+            this.togglePencilGridValue(k, m, n);
+          }
+        }
+      }
+
     },
     assignCell(n: number | null): void {
       const i = this.selected[0]
@@ -265,6 +324,7 @@ export default defineComponent({
 
       if (cell.isPrefilled) return;
       if (cell.cellValue === n) return; // avoid unnecessary operations
+      if (n && n > this.gridSize) return; // For sudokus over 9*9
 
       if (n && this.pencilMode) {
         if (!this.checkCellValue(i, j, n)) {
@@ -279,30 +339,7 @@ export default defineComponent({
         this.clearPencilGridCell(i, j);
 
         if (n != null) {
-          for (let k = 0; k < this.gridSize; k++) {
-            if (this.pencilGrid[i][k][n - 1]) {
-              this.togglePencilGridValue(i, k, n);
-            }
-
-            if (this.pencilGrid[k][j][n - 1]) {
-              this.togglePencilGridValue(k, j, n);
-            }
-
-          }
-          // Judge current square
-          const startI = i - i % this.sudokuLevel;
-          const startJ = j - j % this.sudokuLevel;
-
-          const endI = startI + this.sudokuLevel;
-          const endJ = startJ + this.sudokuLevel;
-
-          for (let k = startI; k < endI; k++) {
-            for (let m = startJ; m < endJ; m++) {
-              if (this.pencilGrid[k][m][n - 1]) {
-                this.togglePencilGridValue(k, m, n);
-              }
-            }
-          }
+          this.updatePencilGridValues(i, j, n);
         }
 
         this.judgeBoard();
@@ -334,17 +371,23 @@ export default defineComponent({
   <div class>
     <div class="flex flex-col md:flex-row">
       <div class="md:basis-1/4 md:border-r">
-        <h1 class="text-2xl font-bold underline my-3">Sudoku {{ gridSize }} x {{ gridSize }}</h1>
+        <div class="flex flex-col px-10">
+          <h1 class="text-2xl font-bold underline my-3">Sudoku {{ gridSize }} x {{ gridSize }}</h1>
 
-        <button class="button-dark mt-5" @click="clearAll">Clear all</button>
-        <br />
-        <button
-          class="mt-5"
-          :class="{ 'button-dark': pencilMode, 'button': !pencilMode }"
-          @click="togglePencilMode"
-        >Pencil mode {{ pencilMode ? 'On' : 'Off' }}</button>
-        <br>
-        <button class="button-dark mt-5" @click="quickPencilAll">Quick Pencil</button>
+          <select v-model="difficulty">
+            <option value="medium">Medium</option>
+            <option value="extreme">Extreme</option>
+          </select>
+          <button class="button-dark mt-5" @click="newGame">New Game</button>
+
+          <button class="button-dark mt-5" @click="clearAll">Clear all</button>
+          <button
+            class="mt-5"
+            :class="{ 'button-dark': pencilMode, 'button': !pencilMode }"
+            @click="togglePencilMode"
+          >Pencil mode {{ pencilMode ? 'On' : 'Off' }}</button>
+          <button class="button-dark mt-5" @click="quickPencilAll">Quick Pencil</button>
+        </div>
       </div>
       <div class="md:basis-3/4">
         <div class="container mx-auto mt-10">

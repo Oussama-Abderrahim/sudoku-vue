@@ -8,10 +8,10 @@ You can find usage of :
 - Use case for Vue3 slots and scoped slots.
 
 ## TODOs :
-- [ ] Prefill using saved sudoku puzzles.
-- [ ] Judge and mark cells on each assign.
+- [X] Prefill using saved sudoku puzzles.
+- [X] Judge and mark cells on each assign.
 - [X] Implement Pencil Mode.
-- [ ] Implement Smart Pencil Mode (checks when assigning and auto-remove).
+- [X] Implement Smart Pencil Mode (checks when assigning and auto-remove).
 - [ ] Add game features (difficulty, time, score, ...).
 
 

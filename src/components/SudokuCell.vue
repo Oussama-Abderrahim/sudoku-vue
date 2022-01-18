@@ -40,6 +40,7 @@ export default defineComponent({
       wrong: cell.isWrong,
       prefilled: cell.isPrefilled,
       'grid grid-cols-3 grid-rows-3': showPencilValues,
+      'grid grid-cols-4 grid-rows-4': pencil.length === 15 && showPencilValues,
     }"
     class
   >
