@@ -7,6 +7,9 @@ You can find usage of :
 - [Tailwind](https://tailwindcss.com/) CSS.
 - Use case for Vue3 slots and scoped slots.
 
+## Live demo
+🔗 You can try the [live demo here](https://oussama-abderrahim.github.io/sudoku-vue/).
+
 ![Screenshot Here](screenshot.png)
 ## TODOs :
 - [X] Prefill using saved sudoku puzzles.

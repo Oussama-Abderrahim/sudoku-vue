@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "concurrently \"vite\" \"npm:tailwind-watch\"",
     "tailwind-watch": "npx tailwindcss -i ./src/assets/main.css -o ./dist/output.css --watch",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "npx tailwindcss -i ./src/assets/main.css -o ./dist/output.css && vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
