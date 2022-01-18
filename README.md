@@ -1,4 +1,4 @@
-# Sudoku made with Vue 3 + Typescript + Vite
+# Full-features Sudoku made with Vue 3 + Typescript + Tailwind css
 
 A fun small project meant to practice Vue 3.  
 You can find usage of :
@@ -7,25 +7,29 @@ You can find usage of :
 - [Tailwind](https://tailwindcss.com/) CSS.
 - Use case for Vue3 slots and scoped slots.
 
+![Screenshot Here](screenshot.png)
 ## TODOs :
 - [X] Prefill using saved sudoku puzzles.
 - [X] Judge and mark cells on each assign.
 - [X] Implement Pencil Mode.
 - [X] Implement Smart Pencil Mode (checks when assigning and auto-remove).
+- [ ] Add a Solver to quickly mark errors.
 - [ ] Add game features (difficulty, time, score, ...).
+- [ ] Add some styling that won't hurt your eyes.
 
 
 ## Running the project locally
 ```sh
-git clone <insert-repo-link-here>
+git clone https://github.com/Oussama-Abderrahim/sudoku-vue.git
 cd sudoku-vue
 npm install
 npm run dev
 ```
-  App should be running on [localhost:5000](localhost:3000).
+  App should be running on [localhost:3000](localhost:3000).
 
-## Code examples 
-Using scoped slots, you can transform a 4 nested v-for loop into a single slot :
+## Showing Off some VueJs beauty 
+To be able to style the grid in a generic way, you will need to render by `n*n` blocks then inside each block render the `n*n` inside cells.  
+Using scoped slots, you can transform (..hide) those 4 nested v-for loops into a single element ✨_✨:
 
 ```html
 <sudoku-grid :grid="grid">

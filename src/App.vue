@@ -96,6 +96,11 @@ export default defineComponent({
           return;
         }
 
+        if (ev.code == 'AltLeft') {
+          this.quickPencilCell()
+          return;
+        }
+
         const i = this.selected[0];
         const j = this.selected[1]
         if (ev.code == 'ArrowRight') {
@@ -146,14 +151,14 @@ export default defineComponent({
 
     clearSelection(): void { this.selected = [-1, -1]; },
 
-    judgeCell(i: number, j: number): void {
+    judgeCell(i: number, j: number): boolean{
       let hasError = false;
 
       const value = this.grid[i][j].cellValue;
 
       if (value == null) {
         this.setGridWrongValue(i, j, false); // in case when a cell value is deleted
-        return;
+        return true;
       }
 
       // Judge row and column
@@ -189,6 +194,8 @@ export default defineComponent({
       }
 
       this.setGridWrongValue(i, j, hasError);
+
+      return !hasError;// true if okay
     },
 
     checkCellValue(i: number, j: number, value: number | null): boolean {
@@ -227,11 +234,21 @@ export default defineComponent({
     },
 
     judgeBoard(): void {
+      let hasWon = true;
       for (let i = 0; i < this.gridSize; i++) {
         for (let j = 0; j < this.gridSize; j++) {
-          this.judgeCell(i, j);
+          if (this.grid[i][j].cellValue === null) {
+            console.log("cell ", i, j, " is empty");
+            hasWon = false;
+          }
+
+          const isCellCorrect = this.judgeCell(i, j);
+
+          hasWon = hasWon && isCellCorrect;
         }
       }
+
+      if (hasWon) alert("Yay you won !\n... Yes that's all I can say now.")
     },
 
     setGridValue(i: number, j: number, cellState: CellState): void {
@@ -374,10 +391,13 @@ export default defineComponent({
         <div class="flex flex-col px-10">
           <h1 class="text-2xl font-bold underline my-3">Sudoku {{ gridSize }} x {{ gridSize }}</h1>
 
-          <select v-model="difficulty">
-            <option value="medium">Medium</option>
-            <option value="extreme">Extreme</option>
-          </select>
+          <div>
+            <label for="difficulty">Difficulty :</label>
+            <select v-model="difficulty">
+              <option value="medium">Medium</option>
+              <option value="extreme">Extreme</option>
+            </select>
+          </div>
           <button class="button-dark mt-5" @click="newGame">New Game</button>
 
           <button class="button-dark mt-5" @click="clearAll">Clear all</button>
@@ -386,7 +406,14 @@ export default defineComponent({
             :class="{ 'button-dark': pencilMode, 'button': !pencilMode }"
             @click="togglePencilMode"
           >Pencil mode {{ pencilMode ? 'On' : 'Off' }}</button>
-          <button class="button-dark mt-5" @click="quickPencilAll">Quick Pencil</button>
+          <div class="w-full text-left mt-2">
+            <kbd>Space</kbd> Toggle pencil mode On/Off<br>
+            <kbd>Del</kbd> &nbsp;&nbsp; Delete Cell value<br>
+            <kbd>Alt</kbd> &nbsp;&nbsp; Quick fill cell with pencil<br>
+          </div>
+          <button class="button-dark mt-5" @click="quickPencilAll">Quick Pencil All</button>
+          (Fill with pencil all possible values)
+
         </div>
       </div>
       <div class="md:basis-3/4">
@@ -438,10 +465,26 @@ export default defineComponent({
 
 .button {
   @apply h-10 px-6 font-semibold rounded-md bg-white text-black;
+  @apply border border-slate-700
 }
 
 .button-dark {
   @apply button;
-  @apply bg-black text-white;
+  @apply bg-slate-700 text-white;
+}
+
+kbd {
+  background-color: #eee;
+  border-radius: 3px;
+  border: 1px solid #b4b4b4;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2),
+    0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
+  color: #333;
+  display: inline-block;
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 4px;
+  white-space: nowrap;
 }
 </style>
