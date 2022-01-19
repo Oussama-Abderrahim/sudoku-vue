@@ -42,8 +42,8 @@ export default defineComponent({
   </div>
 </template>
 
-<style lang="postcss">
-.grid {
+<style lang="postcss" >
+.my-grid {
   margin: auto;
   display: grid;
   /* align-content: center;
@@ -53,12 +53,13 @@ export default defineComponent({
 }
 
 .game-board {
-  @apply grid;
+  @apply my-grid;
   @apply border-2 border-slate-500;
 
-  height: 462px;
-  width: 462px;
-  /* //  */
+  height: 100vw;
+  width: 100vw;
+  max-width: 462px;
+  max-height: 462px;
 }
 
 .game-board-4 {
@@ -70,7 +71,7 @@ export default defineComponent({
 }
 
 .grid-square {
-  @apply grid;
+  @apply my-grid;
   /* row-gap: 1px;
   column-gap: 1px; */
   @apply border border-slate-500;

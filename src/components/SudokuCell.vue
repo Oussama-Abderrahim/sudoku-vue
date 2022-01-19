@@ -58,13 +58,15 @@ export default defineComponent({
 <style lang="postcss">
 .cell {
   @apply text-3xl;
-  height: 50px;
-  width: 50px;
-  display: inline-block;
 
+  width: 11vw;
+  height: 11vw;
+  max-height: 50px;
+  max-width: 50px;
   @apply border border-slate-900;
   @apply font-medium;
   @apply cursor-pointer;
+
 }
 
 .cell.selected {

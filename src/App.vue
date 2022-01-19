@@ -151,7 +151,7 @@ export default defineComponent({
 
     clearSelection(): void { this.selected = [-1, -1]; },
 
-    judgeCell(i: number, j: number): boolean{
+    judgeCell(i: number, j: number): boolean {
       let hasError = false;
 
       const value = this.grid[i][j].cellValue;
@@ -385,9 +385,10 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class>
+  <div class="container h-full m-auto">
     <div class="flex flex-col md:flex-row">
-      <div class="md:basis-1/4 md:border-r">
+      <!-- Sidebar -->
+      <div class="md:basis-1/4 md:border-r m-auto">
         <div class="flex flex-col px-10">
           <h1 class="text-2xl font-bold underline my-3">Sudoku {{ gridSize }} x {{ gridSize }}</h1>
 
@@ -407,18 +408,21 @@ export default defineComponent({
             @click="togglePencilMode"
           >Pencil mode {{ pencilMode ? 'On' : 'Off' }}</button>
           <div class="w-full text-left mt-2">
-            <kbd>Space</kbd> Toggle pencil mode On/Off<br>
-            <kbd>Del</kbd> &nbsp;&nbsp; Delete Cell value<br>
-            <kbd>Alt</kbd> &nbsp;&nbsp; Quick fill cell with pencil<br>
+            <kbd>Space</kbd> Toggle pencil mode On/Off
+            <br />
+            <kbd>Del</kbd> &nbsp;&nbsp; Delete Cell value
+            <br />
+            <kbd>Alt</kbd> &nbsp;&nbsp; Quick fill cell with pencil
+            <br />
           </div>
           <button class="button-dark mt-5" @click="quickPencilAll">Quick Pencil All</button>
           (Fill with pencil all possible values)
-
         </div>
       </div>
-      <div class="md:basis-3/4">
-        <div class="container mx-auto mt-10">
-          <div class="flex flex-wrap flex-row">
+      <!-- Sudoku Grid -->
+      <div class="md:basis-3/4 h-full">
+        <div class="container mx-auto mt-10 h-full">
+          <div class="flex flex-wrap flex-row h-full">
             <div class="md:basis-1/6"></div>
             <div class="md:basis-3/6">
               <sudoku-grid :grid="grid" :pencil-grid="pencilGrid" :sudoku-level="sudokuLevel">
@@ -433,11 +437,18 @@ export default defineComponent({
                 </template>
               </sudoku-grid>
             </div>
-            <div class="basis-1 md:basis-1/6">
-              <div class="flex flex-row md:flex-col mt-5">
-                <button @click="assignCell(i)" v-for="i in 9" class="number-cell">{{ i }}</button>
-                <button @click="assignCell(null)" class="number-cell">X</button>
-              </div>
+            <div class="md:basis-1/12"></div>
+            <div class="basis-full md:basis-1/12
+                        flex flex-row md:flex-col 
+                        my-5 md:my-0">
+              <!-- Row -->
+              <button @click="assignCell(i)" v-for="i in 9" class="number-cell flex-grow">{{ i }}</button>
+              <button @click="assignCell(null)" class="number-cell flex-grow">X</button>
+              <!-- <div class="md:invisible w-full grid grid-rows-1 grid-cols-10">
+              </div>-->
+              <!-- Col -->
+              <!-- <div class="invisible md:visible grid grid-flow-row grid-cols-1 bg-red-300 h-full">
+              </div>-->
             </div>
           </div>
         </div>
@@ -459,13 +470,12 @@ export default defineComponent({
 .number-cell {
   cursor: pointer;
   @apply text-3xl;
-  @apply w-9;
   @apply border border-slate-600;
 }
 
 .button {
   @apply h-10 px-6 font-semibold rounded-md bg-white text-black;
-  @apply border border-slate-700
+  @apply border border-slate-700;
 }
 
 .button-dark {
