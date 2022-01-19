@@ -385,14 +385,18 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="container h-full m-auto">
-    <div class="flex flex-col md:flex-row">
+  <div class="container m-auto">
+    <h1 class="text-2xl font-bold underline mb-3">Sudoku {{ gridSize }} x {{ gridSize }}</h1>
+    <div class="flex flex-col-reverse md:flex-row h-full">
       <!-- Sidebar -->
-      <div class="md:basis-1/4 md:border-r m-auto">
+      <div class="md:basis-1/4 md:border-r">
         <div class="flex flex-col px-10">
-          <h1 class="text-2xl font-bold underline my-3">Sudoku {{ gridSize }} x {{ gridSize }}</h1>
-
-          <div>
+          <button
+            class="mt-5"
+            :class="{ 'button-dark': pencilMode, 'button': !pencilMode }"
+            @click="togglePencilMode"
+          >Pencil mode {{ pencilMode ? 'On' : 'Off' }}</button>
+          <div class="mt-5">
             <label for="difficulty">Difficulty :</label>
             <select v-model="difficulty">
               <option value="medium">Medium</option>
@@ -402,12 +406,7 @@ export default defineComponent({
           <button class="button-dark mt-5" @click="newGame">New Game</button>
 
           <button class="button-dark mt-5" @click="clearAll">Clear all</button>
-          <button
-            class="mt-5"
-            :class="{ 'button-dark': pencilMode, 'button': !pencilMode }"
-            @click="togglePencilMode"
-          >Pencil mode {{ pencilMode ? 'On' : 'Off' }}</button>
-          <div class="w-full text-left mt-2">
+          <div class="w-full text-left mt-2 hidden md:block">
             <kbd>Space</kbd> Toggle pencil mode On/Off
             <br />
             <kbd>Del</kbd> &nbsp;&nbsp; Delete Cell value
@@ -438,9 +437,7 @@ export default defineComponent({
               </sudoku-grid>
             </div>
             <div class="md:basis-1/12"></div>
-            <div class="basis-full md:basis-1/12
-                        flex flex-row md:flex-col 
-                        my-5 md:my-0">
+            <div class="basis-full md:basis-1/12 flex flex-row md:flex-col my-5 md:my-0">
               <!-- Row -->
               <button @click="assignCell(i)" v-for="i in 9" class="number-cell flex-grow">{{ i }}</button>
               <button @click="assignCell(null)" class="number-cell flex-grow">X</button>

@@ -56,7 +56,7 @@ export default defineComponent({
   @apply my-grid;
   @apply border-2 border-slate-500;
 
-  height: 100vw;
+  height: calc(100vw + 6px);
   width: 100vw;
   max-width: 462px;
   max-height: 462px;
